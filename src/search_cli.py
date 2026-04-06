@@ -27,16 +27,16 @@ def main():
     else:
         # Prompt for search term
         try:
-            search_term = input("🔍 Enter search term: ").strip()
+            search_term = input("🔍 검색어를 입력하세요: ").strip()
         except (EOFError, KeyboardInterrupt):
-            print("\n👋 Search cancelled")
+            print("\n👋 검색이 취소되었습니다")
             return
-    
+
     if not search_term:
-        print("❌ No search term provided")
+        print("❌ 검색어가 입력되지 않았습니다")
         return
     
-    print(f"\n🔍 Searching for: '{search_term}'")
+    print(f"\n🔍 검색 중: '{search_term}'")
     print("=" * 60)
     
     # Initialize searcher
@@ -47,7 +47,7 @@ def main():
     results = smart_searcher.search(search_term, max_results=20)
     
     if results:
-        print(f"\n✅ Found {len(results)} results across conversations:\n")
+        print(f"\n✅ {len(results)}개의 결과를 찾았습니다:\n")
         
         # Group by file
         by_file = {}
@@ -85,12 +85,12 @@ def main():
         if session_paths:
             print("\n" + "=" * 60)
             print("Options:")
-            print("  V. VIEW a conversation")
-            print("  E. EXTRACT all conversations")
-            print("  Q. QUIT")
+            print("  V. 대화 보기")
+            print("  E. 모든 대화 추출")
+            print("  Q. 종료")
             
             try:
-                choice = input("\nYour choice: ").strip().upper()
+                choice = input("\n선택: ").strip().upper()
                 
                 if choice == 'V':
                     # View conversation
@@ -99,7 +99,7 @@ def main():
                         extractor.display_conversation(session_paths[0])
                         
                         # After viewing, offer to extract
-                        extract_choice = input("\n📤 Extract this conversation? (y/N): ").strip().lower()
+                        extract_choice = input("\n📤 이 대화를 추출하시겠습니까? (y/N): ").strip().lower()
                         if extract_choice == 'y':
                             conversation = extractor.extract_conversation(session_paths[0])
                             if conversation:
@@ -107,45 +107,45 @@ def main():
                                 print(f"✅ Saved: {output.name}")
                     else:
                         # Multiple results, let user choose
-                        print("\nSelect conversation to view:")
+                        print("\n볼 대화를 선택하세요:")
                         for i, (fname, sid) in enumerate(sessions, 1):
                             print(f"  {i}. {sid[:8]}...")
                         
                         try:
-                            view_num = int(input("\nEnter number (1-{}): ".format(len(sessions))))
+                            view_num = int(input("\n번호를 입력하세요 (1-{}): ".format(len(sessions))))
                             if 1 <= view_num <= len(session_paths):
                                 extractor.display_conversation(session_paths[view_num - 1])
                                 
                                 # After viewing, offer to extract
-                                extract_choice = input("\n📤 Extract this conversation? (y/N): ").strip().lower()
+                                extract_choice = input("\n📤 이 대화를 추출하시겠습니까? (y/N): ").strip().lower()
                                 if extract_choice == 'y':
                                     conversation = extractor.extract_conversation(session_paths[view_num - 1])
                                     if conversation:
                                         output = extractor.save_as_markdown(conversation, sessions[view_num - 1][1])
                                         print(f"✅ Saved: {output.name}")
                         except (ValueError, IndexError):
-                            print("❌ Invalid selection")
+                            print("❌ 잘못된 선택입니다")
                 
                 elif choice == 'E':
                     # Extract all found conversations
                     for i, (session_path, (fname, sid)) in enumerate(zip(session_paths, sessions), 1):
-                        print(f"\n📤 Extracting session {i}...")
+                        print(f"\n📤 세션 {i} 추출 중...")
                         conversation = extractor.extract_conversation(session_path)
                         if conversation:
                             output = extractor.save_as_markdown(conversation, sid)
                             print(f"✅ Saved: {output.name}")
                 
                 elif choice == 'Q':
-                    print("\n👋 Goodbye!")
+                    print("\n👋 안녕히 가세요!")
                     
             except (EOFError, KeyboardInterrupt):
-                print("\n👋 Search cancelled")
+                print("\n👋 검색이 취소되었습니다")
     else:
-        print(f"\n❌ No matches found for '{search_term}'")
-        print("\n💡 Tips:")
-        print("   - Try a more general search term")
-        print("   - Search is case-insensitive by default")
-        print("   - Partial matches are included")
+        print(f"\n❌ '{search_term}'에 대한 결과가 없습니다")
+        print("\n💡 도움말:")
+        print("   - 더 일반적인 검색어를 시도해 보세요")
+        print("   - 검색은 기본적으로 대소문자를 구분하지 않습니다")
+        print("   - 부분 일치도 포함됩니다")
 
 
 if __name__ == "__main__":

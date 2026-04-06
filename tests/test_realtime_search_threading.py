@@ -127,10 +127,12 @@ class TestRealTimeSearchUI(unittest.TestCase):
 
     @patch("realtime_search.threading.Thread")
     @patch("realtime_search.KeyboardHandler")
-    @patch.object(RealTimeSearch, "display")
-    def test_run_exit_key(self, mock_display, mock_keyboard_class, mock_thread_class):
+    def test_run_exit_key(self, mock_keyboard_class, mock_thread_class):
         """Test run exits on ESC key"""
         # Set up mocks
+        mock_display = Mock()
+        self.rts.display = mock_display
+
         mock_keyboard = Mock()
         mock_keyboard_class.return_value.__enter__.return_value = mock_keyboard
         mock_keyboard.get_key.side_effect = ["a", "b", "c", "ESC"]  # Type abc then ESC
@@ -148,14 +150,11 @@ class TestRealTimeSearchUI(unittest.TestCase):
 
     @patch("realtime_search.threading.Thread")
     @patch("realtime_search.KeyboardHandler")
-    @patch("realtime_search.TerminalDisplay")
-    def test_run_select_result(
-        self, mock_display_class, mock_keyboard_class, mock_thread_class
-    ):
+    def test_run_select_result(self, mock_keyboard_class, mock_thread_class):
         """Test run returns selected file path"""
         # Set up mocks
         mock_display = Mock()
-        mock_display_class.return_value = mock_display
+        self.rts.display = mock_display
 
         mock_keyboard = Mock()
         mock_keyboard_class.return_value.__enter__.return_value = mock_keyboard
@@ -180,14 +179,11 @@ class TestRealTimeSearchUI(unittest.TestCase):
 
     @patch("realtime_search.threading.Thread")
     @patch("realtime_search.KeyboardHandler")
-    @patch("realtime_search.TerminalDisplay")
-    def test_run_keyboard_interrupt(
-        self, mock_display_class, mock_keyboard_class, mock_thread_class
-    ):
+    def test_run_keyboard_interrupt(self, mock_keyboard_class, mock_thread_class):
         """Test run handles KeyboardInterrupt"""
         # Set up mocks
         mock_display = Mock()
-        mock_display_class.return_value = mock_display
+        self.rts.display = mock_display
 
         mock_keyboard = Mock()
         mock_keyboard_class.return_value.__enter__.return_value = mock_keyboard
@@ -205,14 +201,11 @@ class TestRealTimeSearchUI(unittest.TestCase):
 
     @patch("realtime_search.threading.Thread")
     @patch("realtime_search.KeyboardHandler")
-    @patch("realtime_search.TerminalDisplay")
-    def test_run_exception_cleanup(
-        self, mock_display_class, mock_keyboard_class, mock_thread_class
-    ):
+    def test_run_exception_cleanup(self, mock_keyboard_class, mock_thread_class):
         """Test run cleans up on exception"""
         # Set up mocks
         mock_display = Mock()
-        mock_display_class.return_value = mock_display
+        self.rts.display = mock_display
 
         mock_keyboard = Mock()
         mock_keyboard_class.return_value.__enter__.return_value = mock_keyboard

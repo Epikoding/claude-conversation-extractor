@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Interactive terminal UI for Claude Conversation Extractor"""
 
+import json
 import os
 import platform
 import shutil
@@ -30,6 +31,37 @@ class InteractiveUI:
         self.searcher = ConversationSearcher()
         self.sessions: List[Path] = []
         self.terminal_width = shutil.get_terminal_size().columns
+        self.config_path = Path.home() / ".claude" / "conversation-extractor-config.json"
+
+    def _load_config(self) -> dict:
+        """Load config from JSON file. Returns default if missing/corrupt."""
+        try:
+            if self.config_path.exists():
+                data = json.loads(self.config_path.read_text(encoding="utf-8"))
+                if isinstance(data, dict) and "recent_custom_paths" in data:
+                    return data
+        except (json.JSONDecodeError, OSError):
+            pass
+        return {"recent_custom_paths": []}
+
+    def _save_config(self, config: dict):
+        """Save config to JSON file."""
+        self.config_path.parent.mkdir(parents=True, exist_ok=True)
+        self.config_path.write_text(
+            json.dumps(config, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+
+    def _update_recent_paths(self, path: Path):
+        """Add path to MRU list (max 3, dedup, most recent first)."""
+        config = self._load_config()
+        paths = config["recent_custom_paths"]
+        path_str = str(path)
+        if path_str in paths:
+            paths.remove(path_str)
+        paths.insert(0, path_str)
+        config["recent_custom_paths"] = paths[:3]
+        self._save_config(config)
 
     def clear_screen(self):
         """Clear the terminal screen"""
@@ -67,12 +99,12 @@ class InteractiveUI:
         print(f"{char * padding} {text} {char * padding}")
 
     def get_folder_selection(self) -> Optional[Path]:
-        """Simple folder selection dialog"""
+        """Simple folder selection dialog with recent custom paths."""
         self.clear_screen()
         self.print_banner()
-        print("\n📁 Where would you like to save your conversations?\n")
+        print("\n📁 대화를 어디에 저장하시겠습니까?\n")
 
-        # Suggest common locations
+        # Default suggestions
         home = Path.home()
         suggestions = [
             home / "Desktop" / "Claude Conversations",
@@ -81,26 +113,37 @@ class InteractiveUI:
             Path.cwd() / "Claude Conversations",
         ]
 
-        print("Suggested locations:")
+        print("추천 위치:")
         for i, path in enumerate(suggestions, 1):
             print(f"  {i}. {path}")
 
-        print("\n  C. Custom location")
-        print("  Q. Quit")
+        # Load recent custom paths
+        config = self._load_config()
+        recent_paths = config.get("recent_custom_paths", [])
+        if recent_paths:
+            print("\n최근 사용한 위치:")
+            for i, path_str in enumerate(recent_paths, len(suggestions) + 1):
+                print(f"  {i}. {path_str}")
+
+        all_choices = suggestions + [Path(p) for p in recent_paths]
+        total = len(all_choices)
+
+        print(f"\n  C. 직접 입력")
+        print("  Q. 종료")
 
         while True:
-            choice = input("\nSelect an option (1-4, C, or Q): ").strip().upper()
+            choice = input(f"\n옵션을 선택하세요 (1-{total}, C, 또는 Q): ").strip().upper()
 
             if choice == "Q":
                 return None
             elif choice == "C":
-                custom_path = input("\nEnter custom path: ").strip()
+                custom_path = input("\n경로를 입력하세요: ").strip()
                 if custom_path:
                     return Path(custom_path).expanduser()
-            elif choice.isdigit() and 1 <= int(choice) <= len(suggestions):
-                return suggestions[int(choice) - 1]
+            elif choice.isdigit() and 1 <= int(choice) <= total:
+                return all_choices[int(choice) - 1]
             else:
-                print("❌ Invalid choice. Please try again.")
+                print("❌ 잘못된 선택입니다. 다시 시도해 주세요.")
 
     def show_sessions_menu(self) -> List[int]:
         """Display sessions and let user select which to extract"""
@@ -108,16 +151,16 @@ class InteractiveUI:
         self.print_banner()
 
         # Get all sessions
-        print("\n🔍 Finding your Claude conversations...")
+        print("\n🔍 대화를 검색하는 중...")
         self.sessions = self.extractor.find_sessions()
 
         if not self.sessions:
-            print("\n❌ No Claude conversations found!")
-            print("Make sure you've used Claude Code at least once.")
-            input("\nPress Enter to exit...")
+            print("\n❌ 대화를 찾을 수 없습니다!")
+            print("Claude Code를 한 번 이상 사용했는지 확인해 주세요.")
+            input("\n계속하려면 Enter를 누르세요...")
             return []
 
-        print(f"\n✅ Found {len(self.sessions)} conversations!\n")
+        print(f"\n✅ {len(self.sessions)}개의 대화를 찾았습니다!\n")
 
         # Display sessions
         for i, session_path in enumerate(self.sessions[:20], 1):  # Show max 20
@@ -129,18 +172,18 @@ class InteractiveUI:
             print(f"  {i:2d}. [{date_str}] {project[:30]:<30} ({size_kb:.1f} KB)")
 
         if len(self.sessions) > 20:
-            print(f"\n  ... and {len(self.sessions) - 20} more conversations")
+            print(f"\n  ... 외 {len(self.sessions) - 20}개의 대화")
 
         print("\n" + "=" * 60)
         print("\nOptions:")
-        print("  A. Extract ALL conversations")
-        print("  R. Extract 5 most RECENT")
-        print("  S. SELECT specific conversations (e.g., 1,3,5)")
-        print("  F. SEARCH conversations (real-time search)")
-        print("  Q. QUIT")
+        print("  A. 모든 대화 추출")
+        print("  R. 최근 5개 추출")
+        print("  S. 특정 대화 선택 (예: 1,3,5)")
+        print("  F. 대화 검색 (실시간 검색)")
+        print("  Q. 종료")
 
         while True:
-            choice = input("\nYour choice: ").strip().upper()
+            choice = input("\n선택: ").strip().upper()
 
             if choice == "Q":
                 return []
@@ -149,23 +192,23 @@ class InteractiveUI:
             elif choice == "R":
                 return list(range(min(5, len(self.sessions))))
             elif choice == "S":
-                selection = input("Enter conversation numbers (e.g., 1,3,5): ").strip()
+                selection = input("대화 번호를 입력하세요 (예: 1,3,5): ").strip()
                 try:
                     indices = [int(x.strip()) - 1 for x in selection.split(",")]
                     # Validate indices
                     if all(0 <= i < len(self.sessions) for i in indices):
                         return indices
                     else:
-                        print("❌ Invalid selection. Please use valid numbers.")
+                        print("❌ 잘못된 선택입니다. 올바른 번호를 입력해 주세요.")
                 except ValueError:
-                    print("❌ Invalid format. Use comma-separated numbers.")
+                    print("❌ 잘못된 형식입니다. 쉼표로 구분된 번호를 입력해 주세요.")
             elif choice == "F":
                 # Search functionality
                 search_results = self.search_conversations()
                 if search_results:
                     return search_results
             else:
-                print("❌ Invalid choice. Please try again.")
+                print("❌ 잘못된 선택입니다. 다시 시도해 주세요.")
 
     def show_progress(self, current: int, total: int, message: str = ""):
         """Display a simple progress bar"""
@@ -190,14 +233,14 @@ class InteractiveUI:
             self.extractor.display_conversation(Path(selected_file))
             
             # Ask if user wants to extract it
-            extract_choice = input("\n📤 Extract this conversation? (y/N): ").strip().lower()
+            extract_choice = input("\n📤 이 대화를 추출하시겠습니까? (y/N): ").strip().lower()
             if extract_choice == 'y':
                 try:
                     index = self.sessions.index(Path(selected_file))
                     return [index]
                 except ValueError:
-                    print("\n❌ Error: Selected file not found in sessions list")
-                    input("\nPress Enter to continue...")
+                    print("\n❌ 오류: 선택한 파일을 세션 목록에서 찾을 수 없습니다")
+                    input("\n계속하려면 Enter를 누르세요...")
             
             # Return empty to go back to menu
             return []
@@ -206,7 +249,7 @@ class InteractiveUI:
 
     def extract_conversations(self, indices: List[int], output_dir: Path) -> int:
         """Extract selected conversations with progress display"""
-        print(f"\n📤 Extracting {len(indices)} conversations...\n")
+        print(f"\n📤 {len(indices)}개의 대화를 추출하는 중...\n")
 
         # Update the extractor's output directory
         self.extractor.output_dir = output_dir
@@ -217,7 +260,7 @@ class InteractiveUI:
         )
 
         print(
-            f"\n\n✅ Successfully extracted {success_count}/{total_count} conversations!"
+            f"\n\n✅ {success_count}/{total_count}개의 대화를 추출했습니다!"
         )
         return success_count
 
@@ -239,13 +282,13 @@ class InteractiveUI:
             # Get output folder
             output_dir = self.get_folder_selection()
             if not output_dir:
-                print("\n👋 Goodbye!")
+                print("\n👋 안녕히 가세요!")
                 return
 
             # Get session selection
             selected_indices = self.show_sessions_menu()
             if not selected_indices:
-                print("\n👋 Goodbye!")
+                print("\n👋 안녕히 가세요!")
                 return
 
             # Create output directory if needed
@@ -254,24 +297,35 @@ class InteractiveUI:
             # Extract conversations
             success_count = self.extract_conversations(selected_indices, output_dir)
 
+            # Save custom path to recent list if not a default suggestion
+            home = Path.home()
+            default_suggestions = [
+                home / "Desktop" / "Claude Conversations",
+                home / "Documents" / "Claude Conversations",
+                home / "Downloads" / "Claude Conversations",
+                Path.cwd() / "Claude Conversations",
+            ]
+            if output_dir not in default_suggestions:
+                self._update_recent_paths(output_dir)
+
             if success_count > 0:
-                print(f"\n📁 Files saved to: {output_dir}")
+                print(f"\n📁 저장 위치: {output_dir}")
 
                 # Offer to open the folder
-                open_choice = input("\n🗂️  Open output folder? (Y/n): ").strip().lower()
+                open_choice = input("\n🗂️  저장 폴더를 여시겠습니까? (Y/n): ").strip().lower()
                 if open_choice != "n":
                     self.open_folder(output_dir)
 
             else:
-                print("\n❌ No conversations were extracted.")
+                print("\n❌ 추출된 대화가 없습니다.")
 
-            input("\n✨ Press Enter to exit...")
+            input("\n✨ 종료하려면 Enter를 누르세요...")
 
         except KeyboardInterrupt:
-            print("\n\n👋 Goodbye!")
+            print("\n\n👋 안녕히 가세요!")
         except Exception as e:
-            print(f"\n❌ Error: {e}")
-            input("\nPress Enter to exit...")
+            print(f"\n❌ 오류: {e}")
+            input("\n종료하려면 Enter를 누르세요...")
 
 
 def main():

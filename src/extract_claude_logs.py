@@ -50,7 +50,7 @@ class ClaudeConversationExtractor:
                 self.output_dir = Path.cwd() / "claude-logs"
                 self.output_dir.mkdir(exist_ok=True)
 
-        print(f"📁 Saving logs to: {self.output_dir}")
+        print(f"📁 저장 위치: {self.output_dir}")
 
     def find_sessions(self, project_path: Optional[str] = None) -> List[Path]:
         """Find all JSONL session files, sorted by most recent first."""
@@ -158,7 +158,7 @@ class ClaudeConversationExtractor:
                         continue
 
         except Exception as e:
-            print(f"❌ Error reading file {jsonl_path}: {e}")
+            print(f"❌ 파일 읽기 오류 {jsonl_path}: {e}")
 
         return conversation
 
@@ -200,7 +200,7 @@ class ClaudeConversationExtractor:
             messages = self.extract_conversation(jsonl_path, detailed=detailed)
             
             if not messages:
-                print("❌ No messages found in conversation")
+                print("❌ 대화에서 메시지를 찾을 수 없습니다")
                 return
             
             # Get session info
@@ -222,7 +222,7 @@ class ClaudeConversationExtractor:
                     pass
             
             print("=" * 60)
-            print("↑↓ to scroll • Q to quit • Enter to continue\n")
+            print("↑↓ 스크롤 • Q 종료 • Enter 계속\n")
             
             # Display messages with pagination
             lines_shown = 8  # Header lines
@@ -263,9 +263,9 @@ class ClaudeConversationExtractor:
                     
                     # Check if we need to paginate
                     if lines_shown >= lines_per_page:
-                        response = input("\n[Enter] Continue • [Q] Quit: ").strip().upper()
+                        response = input("\n[Enter] 계속 • [Q] 종료: ").strip().upper()
                         if response == "Q":
-                            print("\n👋 Stopped viewing")
+                            print("\n👋 보기를 종료했습니다")
                             return
                         # Clear screen for next page
                         print("\033[2J\033[H", end="")
@@ -276,13 +276,13 @@ class ClaudeConversationExtractor:
                     lines_shown += 1
             
             print("\n" + "=" * 60)
-            print("📄 End of conversation")
+            print("📄 대화 끝")
             print("=" * 60)
-            input("\nPress Enter to continue...")
-            
+            input("\n계속하려면 Enter를 누르세요...")
+
         except Exception as e:
-            print(f"❌ Error displaying conversation: {e}")
-            input("\nPress Enter to continue...")
+            print(f"❌ 대화 표시 오류: {e}")
+            input("\n계속하려면 Enter를 누르세요...")
 
     def save_as_markdown(
         self, conversation: List[Dict[str, str]], session_id: str
@@ -539,7 +539,7 @@ class ClaudeConversationExtractor:
         elif format == "html":
             return self.save_as_html(conversation, session_id)
         else:
-            print(f"❌ Unsupported format: {format}")
+            print(f"❌ 지원하지 않는 형식: {format}")
             return None
 
     def get_conversation_preview(self, session_path: Path) -> Tuple[str, int]:
@@ -620,7 +620,7 @@ class ClaudeConversationExtractor:
                         except json.JSONDecodeError:
                             continue
                             
-            return first_user_msg or "No preview available", msg_count
+            return first_user_msg or "미리보기 없음", msg_count
         except Exception as e:
             return f"Error: {str(e)[:30]}", 0
 
@@ -629,11 +629,11 @@ class ClaudeConversationExtractor:
         sessions = self.find_sessions()
 
         if not sessions:
-            print("❌ No Claude sessions found in ~/.claude/projects/")
-            print("💡 Make sure you've used Claude Code and have conversations saved.")
+            print("❌ ~/.claude/projects/에서 세션을 찾을 수 없습니다")
+            print("💡 Claude Code를 사용하고 대화가 저장되어 있는지 확인해 주세요.")
             return []
 
-        print(f"\n📚 Found {len(sessions)} Claude sessions:\n")
+        print(f"\n📚 {len(sessions)}개의 세션을 찾았습니다:\n")
         print("=" * 80)
 
         # Show all sessions if no limit specified
@@ -693,9 +693,9 @@ class ClaudeConversationExtractor:
                         f"({msg_count} messages)"
                     )
                 else:
-                    print(f"⏭️  Skipped session {idx + 1} (no conversation)")
+                    print(f"⏭️  세션 {idx + 1} 건너뜀 (대화 없음)")
             else:
-                print(f"❌ Invalid session number: {idx + 1}")
+                print(f"❌ 잘못된 세션 번호: {idx + 1}")
 
         return success, total
 
@@ -822,21 +822,21 @@ Examples:
             try:
                 date_from = datetime.strptime(args.search_date_from, "%Y-%m-%d")
             except ValueError:
-                print(f"❌ Invalid date format: {args.search_date_from}")
+                print(f"❌ 잘못된 날짜 형식: {args.search_date_from}")
                 return
 
         if args.search_date_to:
             try:
                 date_to = datetime.strptime(args.search_date_to, "%Y-%m-%d")
             except ValueError:
-                print(f"❌ Invalid date format: {args.search_date_to}")
+                print(f"❌ 잘못된 날짜 형식: {args.search_date_to}")
                 return
 
         # Speaker filter
         speaker_filter = None if args.search_speaker == "both" else args.search_speaker
 
         # Perform search
-        print(f"🔍 Searching for: {query}")
+        print(f"🔍 검색 중: {query}")
         results = searcher.search(
             query=query,
             mode=mode,
@@ -848,10 +848,10 @@ Examples:
         )
 
         if not results:
-            print("❌ No matches found.")
+            print("❌ 일치하는 결과가 없습니다.")
             return
 
-        print(f"\n✅ Found {len(results)} matches across conversations:")
+        print(f"\n✅ {len(results)}개의 결과를 찾았습니다:")
 
         # Group and display results
         results_by_file = {}
@@ -873,7 +873,7 @@ Examples:
         if file_paths_list:
             print("\n" + "=" * 60)
             try:
-                view_choice = input("\nView a conversation? Enter number (1-{}) or press Enter to skip: ".format(
+                view_choice = input("\n대화를 보시겠습니까? 번호를 입력하세요 (1-{}) 또는 Enter로 건너뛰기: ".format(
                     len(file_paths_list))).strip()
                 
                 if view_choice.isdigit():
@@ -883,7 +883,7 @@ Examples:
                         extractor.display_conversation(selected_path, detailed=args.detailed)
                         
                         # Offer to extract after viewing
-                        extract_choice = input("\n📤 Extract this conversation? (y/N): ").strip().lower()
+                        extract_choice = input("\n📤 이 대화를 추출하시겠습니까? (y/N): ").strip().lower()
                         if extract_choice == 'y':
                             conversation = extractor.extract_conversation(selected_path, detailed=args.detailed)
                             if conversation:
@@ -896,8 +896,8 @@ Examples:
                                     output = extractor.save_as_markdown(conversation, session_id)
                                 print(f"✅ Saved: {output.name}")
             except (EOFError, KeyboardInterrupt):
-                print("\n👋 Cancelled")
-        
+                print("\n👋 취소됨")
+
         return
 
     # Default action is to list sessions
@@ -911,10 +911,10 @@ Examples:
         sessions = extractor.list_recent_sessions(args.limit)
 
         if sessions and not args.list:
-            print("\nTo extract conversations:")
-            print("  claude-extract --extract <number>      # Extract specific session")
-            print("  claude-extract --recent 5              # Extract 5 most recent")
-            print("  claude-extract --all                   # Extract all sessions")
+            print("\n대화를 추출하려면:")
+            print("  claude-extract --extract <number>      # 특정 세션 추출")
+            print("  claude-extract --recent 5              # 최근 5개 추출")
+            print("  claude-extract --all                   # 모든 세션 추출")
 
     elif args.extract:
         sessions = extractor.find_sessions()
@@ -930,38 +930,38 @@ Examples:
                 continue
 
         if indices:
-            print(f"\n📤 Extracting {len(indices)} session(s) as {args.format.upper()}...")
+            print(f"\n📤 {len(indices)}개의 세션을 {args.format.upper()} 형식으로 추출하는 중...")
             if args.detailed:
-                print("📋 Including detailed tool use and system messages")
+                print("📋 도구 사용 및 시스템 메시지 포함")
             success, total = extractor.extract_multiple(
                 sessions, indices, format=args.format, detailed=args.detailed
             )
-            print(f"\n✅ Successfully extracted {success}/{total} sessions")
+            print(f"\n✅ {success}/{total}개의 세션을 추출했습니다")
 
     elif args.recent:
         sessions = extractor.find_sessions()
         limit = min(args.recent, len(sessions))
-        print(f"\n📤 Extracting {limit} most recent sessions as {args.format.upper()}...")
+        print(f"\n📤 최근 {limit}개의 세션을 {args.format.upper()} 형식으로 추출하는 중...")
         if args.detailed:
-            print("📋 Including detailed tool use and system messages")
+            print("📋 도구 사용 및 시스템 메시지 포함")
 
         indices = list(range(limit))
         success, total = extractor.extract_multiple(
             sessions, indices, format=args.format, detailed=args.detailed
         )
-        print(f"\n✅ Successfully extracted {success}/{total} sessions")
+        print(f"\n✅ {success}/{total}개의 세션을 추출했습니다")
 
     elif args.all:
         sessions = extractor.find_sessions()
-        print(f"\n📤 Extracting all {len(sessions)} sessions as {args.format.upper()}...")
+        print(f"\n📤 모든 {len(sessions)}개의 세션을 {args.format.upper()} 형식으로 추출하는 중...")
         if args.detailed:
-            print("📋 Including detailed tool use and system messages")
+            print("📋 도구 사용 및 시스템 메시지 포함")
 
         indices = list(range(len(sessions)))
         success, total = extractor.extract_multiple(
             sessions, indices, format=args.format, detailed=args.detailed
         )
-        print(f"\n✅ Successfully extracted {success}/{total} sessions")
+        print(f"\n✅ {success}/{total}개의 세션을 추출했습니다")
 
 
 def launch_interactive():
@@ -1000,7 +1000,7 @@ def launch_interactive():
             
             # Offer to extract
             try:
-                extract_choice = input("\n📤 Extract this conversation? (y/N): ").strip().lower()
+                extract_choice = input("\n📤 이 대화를 추출하시겠습니까? (y/N): ").strip().lower()
                 if extract_choice == 'y':
                     conversation = extractor.extract_conversation(selected_file)
                     if conversation:
@@ -1008,7 +1008,7 @@ def launch_interactive():
                         output = extractor.save_as_markdown(conversation, session_id)
                         print(f"✅ Saved: {output.name}")
             except (EOFError, KeyboardInterrupt):
-                print("\n👋 Cancelled")
+                print("\n👋 취소됨")
     else:
         # If other arguments are provided, run the normal CLI
         main()

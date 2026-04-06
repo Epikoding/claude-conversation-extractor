@@ -26,7 +26,7 @@ try:
     SPACY_AVAILABLE = True
 except ImportError:
     SPACY_AVAILABLE = False
-    print("Note: Install spacy for enhanced semantic search capabilities")
+    print("참고: 향상된 시맨틱 검색을 위해 spacy를 설치하세요")
     print("      pip install spacy && python -m spacy download en_core_web_sm")
 
 
@@ -80,7 +80,7 @@ class ConversationSearcher:
                 # Disable unnecessary components for speed
                 self.nlp.select_pipes(disable=["ner", "lemmatizer"])
             except Exception:
-                print("Warning: spaCy model not found. Using basic search.")
+                print("경고: spaCy 모델을 찾을 수 없습니다. 기본 검색을 사용합니다.")
 
         # Common words to ignore in relevance scoring
         self.stop_words = {
@@ -305,7 +305,7 @@ class ConversationSearcher:
                         continue
 
         except Exception as e:
-            print(f"Error searching {jsonl_file}: {e}")
+            print(f"검색 오류 {jsonl_file}: {e}")
 
         return results
 
@@ -382,7 +382,7 @@ class ConversationSearcher:
                         continue
 
         except Exception as e:
-            print(f"Error searching {jsonl_file}: {e}")
+            print(f"검색 오류 {jsonl_file}: {e}")
 
         return results
 
@@ -402,7 +402,7 @@ class ConversationSearcher:
             flags = 0 if case_sensitive else re.IGNORECASE
             regex = re.compile(pattern, flags)
         except re.error as e:
-            print(f"Invalid regex pattern: {e}")
+            print(f"잘못된 정규식 패턴: {e}")
             return []
 
         try:
@@ -464,7 +464,7 @@ class ConversationSearcher:
                         continue
 
         except Exception as e:
-            print(f"Error searching {jsonl_file}: {e}")
+            print(f"검색 오류 {jsonl_file}: {e}")
 
         return results
 
@@ -546,7 +546,7 @@ class ConversationSearcher:
                         continue
 
         except Exception as e:
-            print(f"Error searching {jsonl_file}: {e}")
+            print(f"검색 오류 {jsonl_file}: {e}")
 
         return results
 
@@ -809,10 +809,10 @@ def create_search_index(search_dir: Path, output_file: Path) -> None:
         index["conversations"][conv_id] = metadata
 
     # Save index
-    with open(output_file, "w") as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         json.dump(index, f, indent=2)
 
-    print(f"Created search index with {len(index['conversations'])} conversations")
+    print(f"{len(index['conversations'])}개의 대화로 검색 인덱스를 생성했습니다")
 
 
 # Example usage and testing

@@ -161,6 +161,8 @@ class TestRealTimeSearchIntegration(unittest.TestCase):
 
     def test_performance_with_real_data(self):
         """Test search performance with actual data"""
+        # Scope search to test directory for predictable performance
+        self.rts.search_dir = self.search_dir
         start_time = time.time()
 
         # Perform search

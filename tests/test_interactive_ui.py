@@ -36,7 +36,8 @@ class TestInteractiveUI(unittest.TestCase):
 
     @patch("interactive_ui.RealTimeSearch")
     @patch("interactive_ui.create_smart_searcher")
-    def test_search_conversations_with_result(self, mock_create_smart, mock_rts_class):
+    @patch("builtins.input", return_value="y")
+    def test_search_conversations_with_result(self, mock_input, mock_create_smart, mock_rts_class):
         """Test search conversations when user selects a result"""
         # Mock the smart searcher
         mock_smart_searcher = Mock()
@@ -49,8 +50,10 @@ class TestInteractiveUI(unittest.TestCase):
         # Mock that user selected the second file
         mock_rts.run.return_value = Path("/test/.claude/projects/project2/chat_2.jsonl")
 
-        # Run search
-        indices = self.ui.search_conversations()
+        # Mock display_conversation to avoid file access
+        with patch.object(self.ui.extractor, "display_conversation"):
+            # Run search
+            indices = self.ui.search_conversations()
 
         # Should return index [1] (second file)
         self.assertEqual(indices, [1])
@@ -85,7 +88,7 @@ class TestInteractiveUI(unittest.TestCase):
 
     @patch("interactive_ui.RealTimeSearch")
     @patch("interactive_ui.create_smart_searcher")
-    @patch("builtins.input")
+    @patch("builtins.input", return_value="y")
     @patch("builtins.print")
     def test_search_conversations_file_not_found(
         self, mock_print, mock_input, mock_create_smart, mock_rts_class
@@ -102,8 +105,10 @@ class TestInteractiveUI(unittest.TestCase):
         # Mock that user selected a file not in sessions list
         mock_rts.run.return_value = Path("/test/.claude/projects/unknown/chat_x.jsonl")
 
-        # Run search
-        indices = self.ui.search_conversations()
+        # Mock display_conversation to avoid file access
+        with patch.object(self.ui.extractor, "display_conversation"):
+            # Run search
+            indices = self.ui.search_conversations()
 
         # Should return empty list
         self.assertEqual(indices, [])
@@ -112,7 +117,7 @@ class TestInteractiveUI(unittest.TestCase):
         error_calls = [
             call
             for call in mock_print.call_args_list
-            if "Error: Selected file not found" in str(call)
+            if "오류: 선택한 파일을 세션 목록에서 찾을 수 없습니다" in str(call)
         ]
         self.assertTrue(len(error_calls) > 0)
 
@@ -175,9 +180,20 @@ class TestInteractiveUI(unittest.TestCase):
     @patch("builtins.input")
     def test_show_sessions_menu_all(self, mock_input):
         """Test selecting all conversations"""
-        # Mock the extractor's find_sessions method
+        # Create mock sessions with stat() support
+        mock_sessions = []
+        for i in range(3):
+            session = Mock(spec=Path)
+            session.parent.name = f"project{i}"
+            session.stem = f"chat_{i}"
+            stat_result = Mock()
+            stat_result.st_mtime = 1700000000 + i * 1000
+            stat_result.st_size = 1024 * (i + 1)
+            session.stat.return_value = stat_result
+            mock_sessions.append(session)
+
         with patch.object(
-            self.ui.extractor, "find_sessions", return_value=self.mock_sessions
+            self.ui.extractor, "find_sessions", return_value=mock_sessions
         ):
             mock_input.return_value = "A"
 
@@ -189,9 +205,20 @@ class TestInteractiveUI(unittest.TestCase):
     @patch("builtins.input")
     def test_show_sessions_menu_recent(self, mock_input):
         """Test selecting recent conversations"""
-        # Mock the extractor's find_sessions method
+        # Create mock sessions with stat() support
+        mock_sessions = []
+        for i in range(3):
+            session = Mock(spec=Path)
+            session.parent.name = f"project{i}"
+            session.stem = f"chat_{i}"
+            stat_result = Mock()
+            stat_result.st_mtime = 1700000000 + i * 1000
+            stat_result.st_size = 1024 * (i + 1)
+            session.stat.return_value = stat_result
+            mock_sessions.append(session)
+
         with patch.object(
-            self.ui.extractor, "find_sessions", return_value=self.mock_sessions
+            self.ui.extractor, "find_sessions", return_value=mock_sessions
         ):
             mock_input.return_value = "R"
 
@@ -305,8 +332,8 @@ class TestMenuDisplay(unittest.TestCase):
 
         # Check that real-time search is mentioned
         all_prints = " ".join(str(call) for call in mock_print.call_args_list)
-        self.assertIn("real-time search", all_prints.lower())
-        self.assertIn("F. FIND", all_prints)
+        self.assertIn("실시간 검색", all_prints)
+        self.assertIn("F. 대화 검색", all_prints)
 
 
 if __name__ == "__main__":
