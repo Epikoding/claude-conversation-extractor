@@ -1,95 +1,86 @@
-# Claude Conversation Extractor - Export Claude Code Conversations to Markdown | Save Chat History
+# Claude Conversation Extractor - Claude Code 대화를 마크다운으로 추출
 
-> 🚀 **The ONLY tool to export Claude Code conversations**. Extract Claude chat history from ~/.claude/projects, search through logs, and backup your AI programming sessions.
+> 🚀 **Claude Code 대화를 추출할 수 있는 도구**. ~/.claude/projects에서 대화 기록을 검색하고, 로그를 추출하고, AI 프로그래밍 세션을 백업하세요.
 
-## 🎮 Two Ways to Use
+> 🔀 이 프로젝트는 [ZeroSumQuant/claude-conversation-extractor](https://github.com/ZeroSumQuant/claude-conversation-extractor)를 fork한 것입니다.
 
-- **`claude-start`** - Interactive UI with ASCII art logo, real-time search, and menu-driven interface (recommended)
-- **`claude-extract`** - Plain CLI for command-line operations and scripting
+## 🇰🇷 패치 내용 (v1.1.2-ko)
+
+원본 프로젝트에 다음 기능을 추가했습니다:
+
+### 한글 UI
+
+- 모든 사용자 대면 메시지를 한국어로 번역 (메뉴, 안내, 에러 메시지 등)
+- 실시간 검색에서 한글 입력 지원 (멀티바이트 UTF-8 키보드 핸들러)
+- UTF-8 인코딩 명시적 지정으로 한글 콘텐츠 추출/저장 보장
+
+### 커스텀 경로 기억
+
+- `~/.claude/conversation-extractor-config.json`에 최근 사용한 저장 경로 최대 3개 기억
+- 폴더 선택 메뉴에 "최근 사용한 위치" 섹션 자동 표시
+- MRU(Most Recently Used) 방식으로 가장 최근 경로가 맨 위에 표시
+
+## 🎮 사용 방법
+
+- **`claude-start`** - 인터랙티브 UI (ASCII 로고, 실시간 검색, 메뉴 방식 — 권장)
+- **`claude-extract`** - CLI 모드 (명령줄 조작 및 스크립팅용)
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PyPI version](https://badge.fury.io/py/claude-conversation-extractor.svg)](https://badge.fury.io/py/claude-conversation-extractor)
-[![Downloads](https://pepy.tech/badge/claude-conversation-extractor)](https://pepy.tech/project/claude-conversation-extractor)
-[![GitHub stars](https://img.shields.io/github/stars/ZeroSumQuant/claude-conversation-extractor?style=social)](https://github.com/ZeroSumQuant/claude-conversation-extractor)
-[![Export Claude Code](https://img.shields.io/badge/Export-Claude%20Code%20Conversations-blue)](https://github.com/ZeroSumQuant/claude-conversation-extractor)
-[![Claude Code Logs](https://img.shields.io/badge/Backup-Claude%20Code%20Logs-green)](https://github.com/ZeroSumQuant/claude-conversation-extractor)
 
-**Export Claude Code conversations with the #1 extraction tool.** Claude Code stores chats in ~/.claude/projects as JSONL files with no export button - this tool solves that.
+## ✨ 주요 기능
 
-🔥 **What users search for:** [Export Claude conversations](#how-to-export-claude-code-conversations) | [Claude Code logs location](#where-are-claude-code-logs-stored) | [Backup Claude sessions](#backup-all-claude-conversations) | [Claude JSONL to Markdown](#convert-claude-jsonl-to-markdown)
+- **🔍 실시간 검색**: 입력하는 즉시 대화 검색 — 한글 검색 지원
+- **📝 JSONL → 마크다운 변환**: 터미널 아티팩트 없이 깔끔한 추출
+- **⚡ 빠른 검색**: 내용, 날짜, 대화명으로 검색
+- **📦 일괄 추출**: 모든 Claude Code 대화를 한 번에 추출
+- **🎯 설정 불필요**: `claude-extract` 실행만 하면 자동으로 찾아줌
+- **🚀 외부 의존성 없음**: 순수 Python — 추가 패키지 불필요
+- **🖥️ 크로스 플랫폼**: Windows, macOS, Linux 모두 지원
 
-## 📸 How to Export Claude Code Conversations - Demo
+## 📦 설치
 
-![Export Claude Code conversations demo - Claude Conversation Extractor in action](https://raw.githubusercontent.com/ZeroSumQuant/claude-conversation-extractor/main/assets/demo.gif)
-
-## 🎯 Can't Export Claude Code Conversations? We Solved It.
-
-**Claude Code has no export button.** Your conversations are trapped in `~/.claude/projects/` as undocumented JSONL files. You need:
-- ❌ **Export Claude Code conversations** before they're deleted
-- ❌ **Search Claude Code chat history** to find that solution from last week
-- ❌ **Backup Claude Code logs** for documentation or sharing
-- ❌ **Convert Claude JSONL to Markdown** for readable archives
-
-## ✅ Claude Conversation Extractor: The First Export Tool for Claude Code
-
-This is the **ONLY tool that exports Claude Code conversations**:
-- ✅ **Finds Claude Code logs** automatically in ~/.claude/projects
-- ✅ **Extracts Claude conversations** to clean Markdown files
-- ✅ **Searches Claude chat history** with real-time results
-- ✅ **Backs up all Claude sessions** with one command
-- ✅ **Works on Windows, macOS, Linux** - wherever Claude Code runs
-
-## ✨ Features for Claude Code Users
-
-- **🔍 Real-Time Search**: Search Claude conversations as you type - no flags needed
-- **📝 Claude JSONL to Markdown**: Clean export without terminal artifacts
-- **⚡ Find Any Chat**: Search by content, date, or conversation name
-- **📦 Bulk Export**: Extract all Claude Code conversations at once
-- **🎯 Zero Config**: Just run `claude-extract` - we find everything automatically
-- **🚀 No Dependencies**: Pure Python - no external packages required
-- **🖥️ Cross-Platform**: Export Claude Code logs on any OS
-- **📊 97% Test Coverage**: Reliable extraction you can trust
-
-## 📦 Install Claude Conversation Extractor
-
-### Quick Install (Recommended)
+### 빠른 설치 (권장)
 
 ```bash
-# Using pipx (solves Python environment issues)
+# pipx 사용 (Python 환경 문제 해결)
 pipx install claude-conversation-extractor
 
-# OR using pip
+# 또는 pip 사용
 pip install claude-conversation-extractor
 ```
 
-### Platform-Specific Setup
+### 이 fork 버전 설치 (한글 UI)
+
+```bash
+git clone https://github.com/Epikoding/claude-conversation-extractor.git
+cd claude-conversation-extractor
+pip install -e .
+```
+
+### 플랫폼별 설정
 
 <details>
 <summary>macOS</summary>
 
 ```bash
-# Install pipx first
 brew install pipx
 pipx ensurepath
-
-# Then install the extractor
 pipx install claude-conversation-extractor
 ```
+
 </details>
 
 <details>
 <summary>Windows</summary>
 
 ```bash
-# Install pipx
 py -m pip install --user pipx
 py -m pipx ensurepath
-# Restart terminal, then:
-
-# Install the extractor
+# 터미널 재시작 후:
 pipx install claude-conversation-extractor
 ```
+
 </details>
 
 <details>
@@ -99,279 +90,188 @@ pipx install claude-conversation-extractor
 # Ubuntu/Debian
 sudo apt install pipx
 pipx ensurepath
-
-# Install the extractor
 pipx install claude-conversation-extractor
 ```
+
 </details>
 
-## 🚀 How to Export Claude Code Conversations
+## 🚀 사용법
 
-### Quick Start - Export Claude Conversations
+### 빠른 시작
+
 ```bash
-# Run the interactive UI with ASCII art logo and real-time search
+# 인터랙티브 UI 실행 (ASCII 로고 + 실시간 검색)
 claude-start
 
-# Run the standard CLI interface
+# 표준 CLI 인터페이스
 claude-extract
 
-# Search for specific content directly
-claude-search "API integration"
-
-# Note: claude-logs also works for backward compatibility
+# 특정 내용 검색
+claude-search "API 연동"
 ```
 
-That's it! The tool will:
-1. Find your Claude Code conversations in ~/.claude/projects
-2. Show an interactive menu to search or export
-3. Convert Claude JSONL files to readable Markdown, JSON, or HTML
+실행하면:
 
-### Export Claude Code Logs - All Methods
+1. `~/.claude/projects`에서 대화를 자동으로 찾고
+2. 검색 또는 추출할 수 있는 인터랙티브 메뉴를 표시하고
+3. JSONL 파일을 마크다운, JSON, 또는 HTML로 변환합니다
+
+### CLI 명령어 모음
 
 ```bash
-# Interactive mode with UI - easiest way to export Claude conversations
-claude-start
-
-# CLI mode - command-line interface
-claude-extract
-
-# List all Claude Code conversations
+# 모든 대화 목록 보기
 claude-extract --list
 
-# Export specific Claude chats by number
+# 특정 대화 추출 (번호 지정)
 claude-extract --extract 1,3,5
 
-# Export recent Claude Code sessions
+# 최근 N개 대화 추출
 claude-extract --recent 5
 
-# Backup all Claude conversations at once
+# 모든 대화 일괄 추출
 claude-extract --all
 
-# Save Claude logs to custom location
+# 저장 위치 지정
 claude-extract --output ~/my-claude-backups
 ```
 
-### 📄 Export Formats - NEW in v1.1.1!
-
-Export conversations in multiple formats:
+### 📄 추출 형식
 
 ```bash
-# Export as JSON for programmatic processing
+# JSON 형식으로 추출
 claude-extract --format json --extract 1
 
-# Export as HTML with beautiful formatting
+# HTML 형식으로 추출 (보기 좋은 웹 포맷)
 claude-extract --format html --all
 
-# Include tool use, MCP responses, and system messages
+# 도구 사용, MCP 응답, 시스템 메시지 포함
 claude-extract --detailed --extract 1
 
-# Combine options for complete exports
+# 옵션 조합
 claude-extract --format html --detailed --recent 5
 ```
 
-**Supported Formats:**
-- **Markdown** (default) - Clean, readable text format
-- **JSON** - Structured data for analysis and processing
-- **HTML** - Beautiful web-viewable format with syntax highlighting
+**지원 형식:**
 
-**Detailed Mode (`--detailed`):**
-Includes complete conversation transcript with:
-- Tool use invocations and parameters
-- MCP server responses
-- System messages and errors
-- Terminal command outputs
-- All metadata from the conversation
+- **Markdown** (기본값) - 깔끔하고 읽기 쉬운 텍스트
+- **JSON** - 분석 및 처리용 구조화 데이터
+- **HTML** - 구문 강조가 있는 웹 뷰어블 포맷
 
-### 🔍 Search Claude Code Chat History
+**상세 모드 (`--detailed`):**
 
-Search across all your Claude conversations:
+- 도구 호출 및 파라미터
+- MCP 서버 응답
+- 시스템 메시지 및 에러
+- 터미널 명령 출력
+- 대화의 모든 메타데이터 포함
+
+### 🔍 대화 검색
 
 ```bash
-# Method 1: Direct search command
-claude-search                    # Prompts for search term
-claude-search "zig build"        # Search for specific term
-claude-search "error handling"   # Multi-word search
+# 직접 검색
+claude-search                    # 검색어 입력 프롬프트
+claude-search "zig build"        # 특정 용어 검색
+claude-search "에러 처리"         # 한글 검색 지원
 
-# Method 2: From interactive menu
+# 인터랙티브 메뉴에서 검색
 claude-extract
-# Select "Search conversations" for real-time search
+# "F. 대화 검색" 선택하면 실시간 검색
 ```
 
-**Search features:**
-- Fast full-text search across all conversations
-- Case-insensitive by default
-- Finds exact matches, partial matches, and patterns
-- Shows match previews and conversation context
-- Option to extract matching sessions directly
+**검색 기능:**
 
-## 📁 Where Are Claude Code Logs Stored?
+- 모든 대화에 대한 빠른 전문 검색
+- 기본적으로 대소문자 구분 없음
+- 정확한 일치, 부분 일치, 패턴 매칭
+- 일치 미리보기 및 대화 컨텍스트 표시
+- 검색 결과에서 바로 추출 가능
 
-### Claude Code Default Locations:
+## 📁 Claude Code 로그 저장 위치
+
+### 기본 위치:
+
 - **macOS/Linux**: `~/.claude/projects/*/chat_*.jsonl`
 - **Windows**: `%USERPROFILE%\.claude\projects\*\chat_*.jsonl`
-- **Format**: Undocumented JSONL with base64 encoded content
 
-### Exported Claude Conversation Locations:
+### 추출된 대화 형식:
+
 ```text
 ~/Desktop/Claude logs/claude-conversation-2025-06-09-abc123.md
-├── Metadata (session ID, timestamp)
-├── User messages with 👤 prefix
-├── Claude responses with 🤖 prefix
-└── Clean Markdown formatting
+├── 메타데이터 (세션 ID, 타임스탬프)
+├── 👤 사용자 메시지
+├── 🤖 Claude 응답
+└── 깔끔한 마크다운 포맷
 ```
 
-## ❓ Frequently Asked Questions
+## ❓ 자주 묻는 질문
 
-### How do I export Claude Code conversations?
-Install with `pipx install claude-conversation-extractor` then run `claude-extract`. The tool automatically finds all conversations in ~/.claude/projects.
+### Claude Code 대화를 어떻게 추출하나요?
 
-### How do I export the detailed transcript with tool use?
-Use the `--detailed` flag to include tool invocations, MCP responses, terminal outputs, and system messages:
+`pip install claude-conversation-extractor`로 설치한 후 `claude-extract`를 실행하세요. 도구가 `~/.claude/projects`에서 모든 대화를 자동으로 찾습니다.
+
+### 도구 사용을 포함한 상세 내역은 어떻게 추출하나요?
+
+`--detailed` 플래그를 사용하세요:
+
 ```bash
 claude-extract --detailed --format html --extract 1
 ```
-This gives you the complete conversation as seen in Claude's Ctrl+R view.
 
-### Where does Claude Code store conversations?
-Claude Code saves all chats in `~/.claude/projects/` as JSONL files. There's no built-in export feature - that's why this tool exists.
+### Claude Code는 대화를 어디에 저장하나요?
 
-### Can I search my Claude Code history?
-Yes! Run `claude-search` or select "Search conversations" from the menu. Type anything and see results instantly.
+`~/.claude/projects/`에 JSONL 파일로 저장합니다. 내장 추출 기능이 없어서 이 도구가 필요합니다.
 
-### How to backup all Claude Code sessions?
-Run `claude-extract --all` to export every conversation at once, or use the interactive menu option "Export all conversations".
+### Claude Code 기록을 검색할 수 있나요?
 
-### Does this work with Claude.ai (web version)?
-No, this tool specifically exports Claude Code (desktop app) conversations. Claude.ai has its own export feature in settings.
+네! `claude-search`를 실행하거나 메뉴에서 "대화 검색"을 선택하세요.
 
-### Can I convert Claude JSONL to other formats?
-Yes! Version 1.1.1 supports multiple export formats:
-- **Markdown** - Default clean text format
-- **JSON** - Structured data with timestamps and metadata  
-- **HTML** - Beautiful web-viewable format with modern styling
-Use `--format json` or `--format html` when extracting.
+### 모든 세션을 어떻게 백업하나요?
 
-### Is this tool official?
-No, this is an independent open-source tool. It reads the local Claude Code files on your computer - no API or internet required.
+`claude-extract --all`로 모든 대화를 한 번에 추출하세요.
 
-## 📊 Why This is the Best Claude Code Export Tool
+### Claude.ai (웹 버전)에서도 작동하나요?
 
-| Feature | Claude Conversation Extractor | Manual Copy | Claude.ai Export |
-|---------|------------------------------|-------------|------------------|
-| Works with Claude Code | ✅ Full support | ✅ Tedious | ❌ Different product |
-| Bulk export | ✅ All conversations | ❌ One at a time | ❌ N/A |
-| Search capability | ✅ Real-time search | ❌ None | ❌ N/A |
-| Clean formatting | ✅ Perfect Markdown | ❌ Terminal artifacts | ❌ N/A |
-| Zero configuration | ✅ Auto-detects | ❌ Manual process | ❌ N/A |
-| Cross-platform | ✅ Win/Mac/Linux | ✅ Manual works | ❌ N/A |
+아니요, 이 도구는 Claude Code (데스크톱 앱) 전용입니다. Claude.ai는 설정에서 자체 내보내기 기능이 있습니다.
 
-## 🔧 Technical Details
+### 이 도구는 공식 도구인가요?
 
-### How Claude Conversation Extractor Works
+아니요, 독립적인 오픈소스 도구입니다. 로컬 Claude Code 파일을 읽을 뿐 — API나 인터넷 연결이 필요 없습니다.
 
-1. **Locates Claude Code logs**: Scans ~/.claude/projects for JSONL files
-2. **Parses undocumented format**: Handles Claude's internal data structure
-3. **Extracts conversations**: Preserves user inputs and Claude responses
-4. **Converts to Markdown**: Clean format without terminal escape codes
-5. **Enables search**: Indexes content for instant searching
+## 🔧 기술 세부사항
 
-### Requirements
-- Python 3.8+ (works with 3.9, 3.10, 3.11, 3.12)
-- Claude Code installed with existing conversations
-- No external dependencies for core features
+### 작동 원리
 
-### Optional: Advanced Search with spaCy
+1. `~/.claude/projects`에서 JSONL 파일 탐색
+2. Claude의 내부 데이터 구조 파싱
+3. 사용자 입력과 Claude 응답 추출
+4. 마크다운/JSON/HTML로 변환
+5. 즉시 검색을 위한 콘텐츠 인덱싱
+
+### 요구사항
+
+- Python 3.8+ (3.9, 3.10, 3.11, 3.12, 3.14 호환)
+- Claude Code 설치 및 기존 대화 존재
+- 핵심 기능에 외부 의존성 없음
+
+### 선택사항: spaCy를 이용한 고급 검색
+
 ```bash
-# For semantic search capabilities
 pip install spacy
 python -m spacy download en_core_web_sm
 ```
 
-## 🤝 Contributing
+## 🔒 개인정보 및 보안
 
-Help make the best Claude Code export tool even better! See [CONTRIBUTING.md](docs/development/CONTRIBUTING.md).
+- ✅ **100% 로컬**: 대화 데이터를 외부로 전송하지 않음
+- ✅ **오프라인**: 인터넷 없이 완전히 동작
+- ✅ **추적 없음**: 원격 측정이나 분석 없음
+- ✅ **오픈소스**: 직접 코드를 검토 가능
+- ✅ **읽기 전용**: Claude Code 파일을 수정하지 않음
 
-### Development Setup
-```bash
-# Clone the repo
-git clone https://github.com/ZeroSumQuant/claude-conversation-extractor.git
-cd claude-conversation-extractor
+## 📜 라이선스
 
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dev dependencies
-pip install -r requirements-dev.txt
-
-# Run tests
-pytest
-```
-
-## 🐛 Troubleshooting Claude Export Issues
-
-### Can't find Claude Code conversations?
-- Ensure Claude Code has been used at least once
-- Check `~/.claude/projects/` exists and has .jsonl files
-- Verify read permissions on the directory
-- Try `ls -la ~/.claude/projects/` to see if files exist
-
-### "No Claude sessions found" error
-- Claude Code must be installed and used before exporting
-- Check the correct user directory is being scanned
-- Ensure you're running the tool as the same user who uses Claude Code
-
-### Installation issues?
-See [INSTALL.md](docs/user/INSTALL.md) for:
-- Fixing "externally managed environment" errors
-- PATH configuration help
-- Platform-specific troubleshooting
-
-## 🔒 Privacy & Security
-
-- ✅ **100% Local**: Never sends your Claude conversations anywhere
-- ✅ **No Internet**: Works completely offline
-- ✅ **No Tracking**: Zero telemetry or analytics
-- ✅ **Open Source**: Audit the code yourself
-- ✅ **Read-Only**: Never modifies your Claude Code files
-
-## 📈 Roadmap for Claude Code Export Tool
-
-### ✅ Completed in v1.1.1
-- [x] Export Claude Code conversations to Markdown
-- [x] Real-time search for Claude chat history  
-- [x] Bulk export all Claude sessions
-- [x] Export to JSON format with metadata
-- [x] Export to HTML with beautiful formatting
-- [x] Detailed transcript mode with tool use/MCP responses
-- [x] Direct search command (`claude-search`)
-
-### 🚧 Planned Features
-- [ ] Export to PDF format
-- [ ] Automated daily backups of Claude conversations
-- [ ] Integration with Obsidian, Notion, Roam
-- [ ] Watch mode for auto-export of new conversations
-- [ ] Filter by date range (--after, --before flags)
-- [ ] Export statistics and analytics dashboard
-
-## ⚖️ Legal Disclaimer
-
-This tool accesses Claude Code conversation data stored locally in ~/.claude/projects on your computer. You are accessing your own data. This is an independent project not affiliated with Anthropic. Use responsibly and in accordance with Claude's terms of service.
-
-## 📜 License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
-## 🙏 Support the Project
-
-If this tool helps you export Claude Code conversations:
-- ⭐ Star this repo to help others find it
-- 🐛 Report issues if you find bugs
-- 💡 Suggest features you'd like to see
-- 📣 Share with other Claude Code users
+MIT License - [LICENSE](LICENSE) 참조.
 
 ---
 
-**Keywords**: export claude code conversations, claude conversation extractor, claude code export tool, backup claude code logs, save claude chat history, claude jsonl to markdown, ~/.claude/projects, extract claude sessions, claude code no export button, where are claude code logs stored, claude terminal logs, anthropic claude code export
-
-**Note**: This is an independent tool for exporting Claude Code conversations. Not affiliated with Anthropic.
+**참고**: Claude Code 대화 추출을 위한 독립 도구입니다. Anthropic과 제휴 관계가 없습니다.
