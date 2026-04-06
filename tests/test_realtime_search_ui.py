@@ -295,9 +295,9 @@ class TestTerminalDisplay(unittest.TestCase):
         ]
         output = "".join(str(c) for c in calls)
 
-        self.assertIn("REAL-TIME SEARCH", output)
-        self.assertIn("Type to search", output)
-        self.assertIn("ESC to exit", output)
+        self.assertIn("실시간 검색", output)
+        self.assertIn("검색어 입력", output)
+        self.assertIn("ESC 종료", output)
 
     @patch("builtins.print")
     def test_draw_results_empty(self, mock_print):
@@ -307,7 +307,7 @@ class TestTerminalDisplay(unittest.TestCase):
         calls = [call[0][0] if call[0] else "" for call in mock_print.call_args_list]
         output = "".join(str(c) for c in calls)
 
-        self.assertIn("Start typing to search", output)
+        self.assertIn("검색어를 입력하세요", output)
 
     @patch("builtins.print")
     def test_draw_results_with_items(self, mock_print):

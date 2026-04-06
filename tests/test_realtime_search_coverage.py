@@ -82,7 +82,7 @@ class TestKeyboardHandlerCoverage(unittest.TestCase):
         self.assertEqual(result, "a")
 
     @patch("sys.platform", "win32")
-    @patch("realtime_search.msvcrt")
+    @patch("realtime_search.msvcrt", create=True)
     def test_windows_keyboard_decode_error(self, mock_msvcrt):
         """Test Windows keyboard decode error handling"""
         handler = KeyboardHandler()
@@ -151,22 +151,27 @@ class TestKeyboardHandlerCoverage(unittest.TestCase):
             handler = KeyboardHandler()
 
             # Test escape sequences
+            HAS_INPUT = ([sys.stdin], [], [])
+            NO_INPUT = ([], [], [])
+
             test_cases = [
-                (["\x1b", "[A"], "UP"),
-                (["\x1b", "[B"], "DOWN"),
-                (["\x1b", "[C"], "RIGHT"),
-                (["\x1b", "[D"], "LEFT"),
-                (["\x1b"], "ESC"),  # Just escape
-                (["\r"], "ENTER"),
-                (["\n"], "ENTER"),
-                (["\x7f"], "BACKSPACE"),
-                (["\x08"], "BACKSPACE"),
+                # Arrow keys: ESC, '[', arrow char - 3 reads, 3 selects (all have input)
+                ([HAS_INPUT, HAS_INPUT, HAS_INPUT], ["\x1b", "[", "A"], "UP"),
+                ([HAS_INPUT, HAS_INPUT, HAS_INPUT], ["\x1b", "[", "B"], "DOWN"),
+                ([HAS_INPUT, HAS_INPUT, HAS_INPUT], ["\x1b", "[", "C"], "RIGHT"),
+                ([HAS_INPUT, HAS_INPUT, HAS_INPUT], ["\x1b", "[", "D"], "LEFT"),
+                # ESC alone: 1 read, 2 selects (first has input, second no input)
+                ([HAS_INPUT, NO_INPUT], ["\x1b"], "ESC"),
+                ([HAS_INPUT], ["\r"], "ENTER"),
+                ([HAS_INPUT], ["\n"], "ENTER"),
+                ([HAS_INPUT], ["\x7f"], "BACKSPACE"),
+                ([HAS_INPUT], ["\x08"], "BACKSPACE"),
             ]
 
-            for sequence, expected in test_cases:
+            for select_returns, sequence, expected in test_cases:
                 with self.subTest(expected=expected):
-                    # Mock select to indicate data available
-                    mock_select.select.return_value = ([sys.stdin], [], [])
+                    # Mock select with proper return sequence
+                    mock_select.select.side_effect = select_returns
 
                     # Mock stdin reads
                     mock_stdin.read.side_effect = sequence
@@ -175,6 +180,7 @@ class TestKeyboardHandlerCoverage(unittest.TestCase):
                     self.assertEqual(result, expected)
 
                     # Reset mocks
+                    mock_select.select.side_effect = None
                     mock_stdin.read.side_effect = None
 
     @patch("sys.platform", "linux")
@@ -218,22 +224,22 @@ class TestTerminalDisplayCoverage(unittest.TestCase):
         """Test cursor movement operations"""
         # Move cursor
         self.display.move_cursor(5, 10)
-        mock_print.assert_called_with("\033[5;10H", end="")
+        mock_print.assert_called_with("\033[5;10H", end="", flush=True)
 
         # Clear line
         mock_print.reset_mock()
         self.display.clear_line()
-        mock_print.assert_called_with("\033[2K", end="")
+        mock_print.assert_called_with("\033[2K", end="", flush=True)
 
         # Save cursor
         mock_print.reset_mock()
         self.display.save_cursor()
-        mock_print.assert_called_with("\033[s", end="")
+        mock_print.assert_called_with("\033[s", end="", flush=True)
 
         # Restore cursor
         mock_print.reset_mock()
         self.display.restore_cursor()
-        mock_print.assert_called_with("\033[u", end="")
+        mock_print.assert_called_with("\033[u", end="", flush=True)
 
     @patch("builtins.print")
     def test_draw_results_with_query_no_match(self, mock_print):

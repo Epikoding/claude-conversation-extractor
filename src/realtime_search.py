@@ -133,7 +133,23 @@ class KeyboardHandler:
                     return "BACKSPACE"
                 elif char == '\x03':  # Ctrl+C
                     raise KeyboardInterrupt
-                elif ord(char) >= 32 and ord(char) < 127:  # Printable characters
+                elif ord(char) >= 32:  # Printable characters (including multibyte start)
+                    # Handle multibyte UTF-8 (Korean, etc.)
+                    if ord(char) > 127:
+                        byte = char.encode('utf-8')
+                        # Read remaining bytes for multibyte character
+                        result = byte
+                        while True:
+                            try:
+                                result.decode('utf-8')
+                                break
+                            except UnicodeDecodeError:
+                                if select.select([sys.stdin], [], [], 0.05)[0]:
+                                    next_char = sys.stdin.read(1)
+                                    result += next_char.encode('latin-1')
+                                else:
+                                    return None
+                        return result.decode('utf-8')
                     return char
                 else:
                     return None
@@ -173,9 +189,9 @@ class TerminalDisplay:
     def draw_header(self):
         """Draw the search interface header"""
         self.move_cursor(1, 1)
-        print("🔍 REAL-TIME SEARCH")
+        print("🔍 실시간 검색")
         print("=" * 60)
-        print("Type to search • ↑↓ to select • Enter to open • ESC to exit")
+        print("검색어 입력 • ↑↓ 선택 • Enter 열기 • ESC 종료")
         print("─" * 60)
 
     def draw_results(self, results: List, selected_index: int, query: str):
@@ -188,9 +204,9 @@ class TerminalDisplay:
         if not results:
             self.move_cursor(self.header_lines + 1, 1)
             if query:
-                print(f"No results found for '{query}'")
+                print(f"'{query}'에 대한 결과가 없습니다")
             else:
-                print("Start typing to search...")
+                print("검색어를 입력하세요...")
         else:
             # Display results
             for i, result in enumerate(results[:10]):  # Show max 10 results
@@ -231,7 +247,7 @@ class TerminalDisplay:
 
         self.move_cursor(row + 1, 1)
         self.clear_line()
-        print(f"Search: {query}", end="")
+        print(f"검색: {query}", end="")
 
         # Position cursor
         self.move_cursor(row + 1, 9 + cursor_pos)
@@ -359,7 +375,7 @@ class RealTimeSearch:
                 self.trigger_search()
                 return "redraw"
 
-        elif key and len(key) == 1 and ord(key) >= 32 and ord(key) < 127:  # Printable character
+        elif key and len(key) >= 1 and key.isprintable():  # Printable character (including Korean)
             self.state.query = (
                 self.state.query[: self.state.cursor_pos]
                 + key
@@ -533,10 +549,10 @@ def main():
     selected_file = rts.run()
     
     if selected_file:
-        print(f"\n✅ Selected: {selected_file}")
+        print(f"\n✅ 선택됨: {selected_file}")
         # Could optionally extract here
     else:
-        print("\n👋 Search cancelled")
+        print("\n👋 검색이 취소되었습니다")
 
 
 if __name__ == "__main__":
