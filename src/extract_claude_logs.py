@@ -67,11 +67,17 @@ class ClaudeConversationExtractor:
 
     def extract_conversation(self, jsonl_path: Path, detailed: bool = False) -> List[Dict[str, str]]:
         """Extract conversation messages from a JSONL file.
-        
+
         Args:
             jsonl_path: Path to the JSONL file
-            detailed: If True, include tool use, MCP responses, and system messages
+            detailed: If True, include tool use and results grouped by turn
         """
+        if detailed:
+            return self._extract_conversation_detailed(jsonl_path)
+        return self._extract_conversation_basic(jsonl_path)
+
+    def _extract_conversation_basic(self, jsonl_path: Path) -> List[Dict[str, str]]:
+        """Extract only user and assistant text messages (basic mode)."""
         conversation = []
 
         try:
@@ -84,6 +90,9 @@ class ClaudeConversationExtractor:
                         if entry.get("type") == "user" and "message" in entry:
                             msg = entry["message"]
                             if isinstance(msg, dict) and msg.get("role") == "user":
+                                # Skip tool result returns
+                                if "toolUseResult" in entry:
+                                    continue
                                 content = msg.get("content", "")
                                 text = self._extract_text_content(content)
 
@@ -101,7 +110,7 @@ class ClaudeConversationExtractor:
                             msg = entry["message"]
                             if isinstance(msg, dict) and msg.get("role") == "assistant":
                                 content = msg.get("content", [])
-                                text = self._extract_text_content(content, detailed=detailed)
+                                text = self._extract_text_content(content)
 
                                 if text and text.strip():
                                     conversation.append(
@@ -111,56 +120,159 @@ class ClaudeConversationExtractor:
                                             "timestamp": entry.get("timestamp", ""),
                                         }
                                     )
-                        
-                        # Include tool use and system messages if detailed mode
-                        elif detailed:
-                            # Extract tool use events
-                            if entry.get("type") == "tool_use":
-                                tool_data = entry.get("tool", {})
-                                tool_name = tool_data.get("name", "unknown")
-                                tool_input = tool_data.get("input", {})
-                                conversation.append(
-                                    {
-                                        "role": "tool_use",
-                                        "content": f"🔧 Tool: {tool_name}\nInput: {json.dumps(tool_input, indent=2)}",
-                                        "timestamp": entry.get("timestamp", ""),
-                                    }
-                                )
-                            
-                            # Extract tool results
-                            elif entry.get("type") == "tool_result":
-                                result = entry.get("result", {})
-                                output = result.get("output", "") or result.get("error", "")
-                                conversation.append(
-                                    {
-                                        "role": "tool_result",
-                                        "content": f"📤 Result:\n{output}",
-                                        "timestamp": entry.get("timestamp", ""),
-                                    }
-                                )
-                            
-                            # Extract system messages
-                            elif entry.get("type") == "system" and "message" in entry:
-                                msg = entry.get("message", "")
-                                if msg:
-                                    conversation.append(
-                                        {
-                                            "role": "system",
-                                            "content": f"ℹ️ System: {msg}",
-                                            "timestamp": entry.get("timestamp", ""),
-                                        }
-                                    )
 
                     except json.JSONDecodeError:
                         continue
                     except Exception:
-                        # Silently skip problematic entries
                         continue
 
         except Exception as e:
             print(f"❌ 파일 읽기 오류 {jsonl_path}: {e}")
 
         return conversation
+
+    def _extract_conversation_detailed(self, jsonl_path: Path) -> List[Dict[str, str]]:
+        """Extract conversation with tool use/results grouped per turn.
+
+        Groups all assistant activity (tool calls, tool results, text)
+        between two real user messages into a single assistant turn.
+        """
+        # Step 1: Read all entries
+        entries = []
+        try:
+            with open(jsonl_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    try:
+                        entries.append(json.loads(line.strip()))
+                    except json.JSONDecodeError:
+                        continue
+        except Exception as e:
+            print(f"❌ 파일 읽기 오류 {jsonl_path}: {e}")
+            return []
+
+        # Step 2: Build a map of tool_use_id → tool_result content
+        tool_results = {}
+        for entry in entries:
+            if entry.get("type") == "user" and "toolUseResult" in entry:
+                msg = entry.get("message", {})
+                content = msg.get("content", []) if isinstance(msg, dict) else []
+                if isinstance(content, list):
+                    for item in content:
+                        if isinstance(item, dict) and item.get("type") == "tool_result":
+                            tool_use_id = item.get("tool_use_id", "")
+                            result_content = item.get("content", "")
+                            if isinstance(result_content, list):
+                                result_parts = []
+                                for rc in result_content:
+                                    if isinstance(rc, dict) and rc.get("type") == "text":
+                                        result_parts.append(rc.get("text", ""))
+                                result_content = "\n".join(result_parts)
+                            if tool_use_id:
+                                tool_results[tool_use_id] = str(result_content)
+
+        # Step 3: Split into turns by real user messages
+        conversation = []
+        assistant_parts = []
+        assistant_timestamp = ""
+
+        def _flush_assistant():
+            nonlocal assistant_parts, assistant_timestamp
+            if assistant_parts:
+                merged = "\n\n".join(assistant_parts)
+                if merged.strip():
+                    conversation.append({
+                        "role": "assistant",
+                        "content": merged,
+                        "timestamp": assistant_timestamp,
+                    })
+            assistant_parts = []
+            assistant_timestamp = ""
+
+        for entry in entries:
+            etype = entry.get("type", "")
+
+            # Real user message (not tool result return)
+            if etype == "user" and "message" in entry and "toolUseResult" not in entry:
+                msg = entry["message"]
+                if isinstance(msg, dict) and msg.get("role") == "user":
+                    # Flush pending assistant turn
+                    _flush_assistant()
+
+                    content = msg.get("content", "")
+                    text = self._extract_text_content(content)
+                    if text and text.strip():
+                        conversation.append({
+                            "role": "user",
+                            "content": text,
+                            "timestamp": entry.get("timestamp", ""),
+                        })
+
+            # Assistant message
+            elif etype == "assistant" and "message" in entry:
+                msg = entry["message"]
+                if not isinstance(msg, dict) or msg.get("role") != "assistant":
+                    continue
+
+                if not assistant_timestamp:
+                    assistant_timestamp = entry.get("timestamp", "")
+
+                content = msg.get("content", [])
+                if isinstance(content, list):
+                    for item in content:
+                        if not isinstance(item, dict):
+                            continue
+                        item_type = item.get("type", "")
+
+                        if item_type == "text":
+                            text = item.get("text", "").strip()
+                            if text:
+                                assistant_parts.append(text)
+
+                        elif item_type == "tool_use":
+                            tool_name = item.get("name", "unknown")
+                            tool_id = item.get("id", "")
+                            tool_input = item.get("input", {})
+
+                            # Format tool call
+                            input_summary = self._summarize_tool_input(tool_name, tool_input)
+                            part = f"🔧 **{tool_name}**: `{input_summary}`"
+
+                            # Append matching tool result
+                            if tool_id in tool_results:
+                                result_text = tool_results[tool_id]
+                                # Truncate very long results
+                                max_result_len = 500
+                                if len(result_text) > max_result_len:
+                                    result_text = result_text[:max_result_len] + f"\n... ({len(result_text) - max_result_len}자 생략)"
+                                part += f"\n📤 {result_text}"
+
+                            assistant_parts.append(part)
+
+                        # Skip thinking blocks
+
+        # Flush last assistant turn
+        _flush_assistant()
+
+        return conversation
+
+    @staticmethod
+    def _summarize_tool_input(tool_name: str, tool_input: dict) -> str:
+        """Create a concise summary of tool input for display."""
+        if tool_name in ("Read", "Write"):
+            return tool_input.get("file_path", str(tool_input))
+        elif tool_name == "Bash":
+            return tool_input.get("command", str(tool_input))
+        elif tool_name == "Edit":
+            return tool_input.get("file_path", str(tool_input))
+        elif tool_name in ("Grep", "Glob"):
+            pattern = tool_input.get("pattern", "")
+            path = tool_input.get("path", "")
+            return f"{pattern}" + (f" in {path}" if path else "")
+        else:
+            # Generic: show first key=value pair
+            for k, v in tool_input.items():
+                return f"{k}={v}" if len(str(v)) < 80 else f"{k}={str(v)[:77]}..."
+            return str(tool_input)
 
     def _extract_text_content(self, content, detailed: bool = False) -> str:
         """Extract text from various content formats Claude uses.
